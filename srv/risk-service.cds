@@ -9,7 +9,7 @@ service RiskService {
             {
                 grant : [ '*' ],
                 to : [ 'RiskManager' ]
-            }
+            }            
         ]) as projection on my.Risks;
     annotate Risks with @odata.draft.enabled;
   entity Mitigations @(restrict : [
