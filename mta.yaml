@@ -11,7 +11,6 @@ build-parameters:
       - npm install --production
       - npx -p @sap/cds-dk cds build --production
       - npx rimraf gen/db/src/gen/data
-
 modules:
   - name: demo_halli_cap-srv
     type: nodejs
@@ -49,5 +48,14 @@ resources:
       service-plan: application
       path: ./xs-security.json
       config:
-        xsappname: demo_halli_cap-${org}-${space}
+        xsappname: demo_halli_cap-${space}
         tenant-mode: dedicated
+        role-collections:
+         - name: 'RiskManager12'
+           description: Manage Risks
+           role-template-references:
+             - $XSAPPNAME.RiskManager
+         - name: 'RiskViewer12'
+           description: View Risks
+           role-template-references:
+             - $XSAPPNAME.RiskViewer
