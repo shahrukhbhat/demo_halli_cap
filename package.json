@@ -6,14 +6,16 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
+    "@sap-cloud-sdk/http-client": "^3.0.0",
     "@sap/cds": "^6",
+    "@sap/xssec": "^3",
     "express": "^4",
     "hdb": "^0.19.0",
-    "@sap/xssec": "^3",
     "passport": "^0"
   },
   "devDependencies": {
     "@sap/ux-specification": "^1.102.17",
+    "rimraf": "^3.0.2",
     "sqlite3": "^5.0.4"
   },
   "engines": {
@@ -22,7 +24,10 @@
   "scripts": {
     "start": "cds run",
     "watch-risks": "cds watch --open risks/webapp/index.html?sap-ui-xx-viewCache=false",
-    "watch-mitigations": "cds watch --open mitigations/webapp/index.html?sap-ui-xx-viewCache=false"
+    "watch-mitigations": "cds watch --open mitigations/webapp/index.html?sap-ui-xx-viewCache=false",
+    "undeploy": "cf undeploy demo_halli_cap --delete-services --delete-service-keys --delete-service-brokers",
+    "build": "rimraf resources mta_archives && mbt build --mtar archive",
+    "deploy": "cf deploy mta_archives/archive.mtar --retries 1"
   },
   "sapux": [
     "app/risks",
@@ -40,8 +45,17 @@
       },
       "db": {
         "kind": "sql"
+      },
+      "ZGWDEMO": {
+        "kind": "odata-v2",
+        "model": "srv/external/ZGWDEMO",
+        "[production]": {
+          "credentials": {
+            "destination": "ES5",
+            "path": "/sap/opu/odata/iwbep/GWDEMO"
+          }
+        }
       }
-
     }
   }
 }

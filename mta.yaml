@@ -1,61 +1,157 @@
-_schema-version: '3.1'
+_schema-version: "3.1"
 ID: demo_halli_cap
+description: A simple CAP project.
 version: 1.0.0
-description: "A simple CAP project."
+modules:
+- name: demo_halli_cap-srv
+  type: nodejs
+  path: gen/srv
+  requires:
+  - name: demo_halli_cap-db
+  - name: demo_halli_cap-auth
+  provides:
+  - name: srv-api
+    properties:
+      srv-url: ${default-url}
+  parameters:
+    buildpack: nodejs_buildpack
+  build-parameters:
+    builder: npm-ci
+- name: demo_halli_cap-db-deployer
+  type: hdb
+  path: gen/db
+  requires:
+  - name: demo_halli_cap-db
+  parameters:
+    buildpack: nodejs_buildpack
+- name: demo_halli_cap-destinations
+  type: com.sap.application.content
+  requires:
+  - name: demo_halli_cap-auth
+    parameters:
+      service-key:
+        name: demo_halli_cap-auth-key
+  - name: demo_halli_cap-html5-repo-host
+    parameters:
+      service-key:
+        name: demo_halli_cap-html5-repo-host-key
+  - name: srv-api
+  - name: demo_halli_cap-destination
+    parameters:
+      content-target: true
+  parameters:
+    content:
+      instance:
+        destinations:
+        - Authentication: OAuth2UserTokenExchange
+          Name: demo_halli_cap-app-srv
+          TokenServiceInstanceName: demo_halli_cap-auth
+          TokenServiceKeyName: demo_halli_cap-auth-key
+          URL: ~{srv-api/srv-url}
+          sap.cloud.service: demo_halli_cap.service
+        - Name: demo_halli_cap-html5-repo-host
+          ServiceInstanceName: demo_halli_cap-html5-repo-host
+          ServiceKeyName: demo_halli_cap-html5-repo-host-key
+          sap.cloud.service: demo_halli_cap.service
+        - Authentication: OAuth2UserTokenExchange
+          Name: demo_halli_cap-auth
+          ServiceInstanceName: demo_halli_cap-auth
+          ServiceKeyName: demo_halli_cap-auth-key
+          sap.cloud.service: demo_halli_cap.service
+        existing_destinations_policy: update
+  build-parameters:
+    no-source: true
+- name: demo_halli_cap-app-content
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: demo_halli_cap-html5-repo-host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - nsrisks.zip
+      name: nsrisks
+      target-path: resources/
+    - artifacts:
+      - nsmitigations.zip
+      name: nsmitigations
+      target-path: resources/
+- name: nsrisks
+  type: html5
+  path: app/risks
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+- name: nsmitigations
+  type: html5
+  path: app/mitigations
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+resources:
+- name: demo_halli_cap-db
+  type: com.sap.xs.hdi-container
+  parameters:
+    service: hana
+    service-plan: hdi-shared
+- name: demo_halli_cap-auth
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      role-collections:
+      - description: Manage Risks
+        name: RiskManager12
+        role-template-references:
+        - $XSAPPNAME.RiskManager
+      - description: View Risks
+        name: RiskViewer12
+        role-template-references:
+        - $XSAPPNAME.RiskViewer
+      tenant-mode: dedicated
+      xsappname: demo_halli_cap-${space}
+    path: ./xs-security.json
+    service: xsuaa
+    service-plan: application
+- name: demo_halli_cap-destination
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      init_data:
+        instance:
+          destinations:
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          existing_destinations_policy: update
+    service: destination
+    service-plan: lite
+- name: demo_halli_cap-html5-repo-host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-host
 parameters:
+  deploy_mode: html5-repo
   enable-parallel-deployments: true
+
 build-parameters:
   before-all:
-   - builder: custom
-     commands:
-      - npm install --production
-      - npx -p @sap/cds-dk cds build --production
-      - npx rimraf gen/db/src/gen/data
-modules:
-  - name: demo_halli_cap-srv
-    type: nodejs
-    path: gen/srv
-    parameters:
-      buildpack: nodejs_buildpack
-    build-parameters:
-      builder: npm-ci
-    provides:
-      - name: srv-api # required by consumers of CAP services (e.g. approuter)
-        properties:
-          srv-url: ${default-url}
-    requires:
-      - name: demo_halli_cap-db
-      - name: demo_halli_cap-auth
-
-  - name: demo_halli_cap-db-deployer
-    type: hdb
-    path: gen/db
-    parameters:
-      buildpack: nodejs_buildpack
-    requires:
-      - name: demo_halli_cap-db
-
-resources:
-  - name: demo_halli_cap-db
-    type: com.sap.xs.hdi-container
-    parameters:
-      service: hana
-      service-plan: hdi-shared
-  - name: demo_halli_cap-auth
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: xsuaa
-      service-plan: application
-      path: ./xs-security.json
-      config:
-        xsappname: demo_halli_cap-${space}
-        tenant-mode: dedicated
-        role-collections:
-         - name: 'RiskManager12'
-           description: Manage Risks
-           role-template-references:
-             - $XSAPPNAME.RiskManager
-         - name: 'RiskViewer12'
-           description: View Risks
-           role-template-references:
-             - $XSAPPNAME.RiskViewer
+  - builder: custom
+    commands:
+    - npm install --production
+    - npx -p @sap/cds-dk cds build --production
+    - npx rimraf gen/db/src/gen/data
