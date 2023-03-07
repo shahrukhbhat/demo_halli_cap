@@ -6,7 +6,8 @@ const cds = require('@sap/cds')
  */
 module.exports = cds.service.impl(async function() {
 
-    const ZGWDEMO = await cds.connect.to('ZGWDEMO');
+    // const ZGWDEMO = await cds.connect.to('ZGWDEMO');
+    const ZGWDEMO = await cds.connect.to('ZCA_BPF_LAYOUT_METADATA_SRV');
 
     this.on('READ', 'Suppliers', async req => {
         const res = await ZGWDEMO.run(req.query);

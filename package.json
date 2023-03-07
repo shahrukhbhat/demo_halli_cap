@@ -55,6 +55,20 @@
             "path": "/sap/opu/odata/iwbep/GWDEMO"
           }
         }
+      },
+      "ZCA_BPF_LAYOUT_METADATA_SRV": {
+        "kind": "odata-v2",
+        "model": "srv/external/ZCA_BPF_LAYOUT_METADATA_SRV",
+        "[production]": {
+          "credentials": {
+            "destination": "euphttp",
+            "path": "/sap/opu/odata/sap/CA_BPF_LAYOUT_METADATA_SRV"
+          }
+        }
+      },
+      "API_BUSINESS_PARTNER": {
+        "kind": "odata-v2",
+        "model": "srv/external/API_BUSINESS_PARTNER"
       }
     }
   }

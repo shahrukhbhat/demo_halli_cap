@@ -9,6 +9,7 @@ modules:
   requires:
   - name: demo_halli_cap-db
   - name: demo_halli_cap-auth
+  - name: demo_halli_cap-connectivity
   provides:
   - name: srv-api
     properties:
@@ -36,6 +37,10 @@ modules:
       service-key:
         name: demo_halli_cap-html5-repo-host-key
   - name: srv-api
+  - name: demo_halli_cap-connectivity
+    parameters:
+      service-key:
+        name: demo_halli_cap-connectivity-key
   - name: demo_halli_cap-destination
     parameters:
       content-target: true
@@ -139,6 +144,11 @@ resources:
           existing_destinations_policy: update
     service: destination
     service-plan: lite
+- name: demo_halli_cap-connectivity
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: connectivity
+    service-plan: lite    
 - name: demo_halli_cap-html5-repo-host
   type: org.cloudfoundry.managed-service
   parameters:
